@@ -1,69 +1,114 @@
-import Image from "next/image";
+"use client";
+
+import { ChangeEvent, FormEvent, startTransition, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [pinnedNote, setPinnedNote] = useState("Start where you are.\nWrite one thing down.");
+
+  useEffect(() => {
+    const savedNote = localStorage.getItem("jotthought-pinned-note");
+    if (savedNote !== null) {
+      startTransition(() => setPinnedNote(savedNote));
+    }
+  }, []);
+
+  function handlePinnedNoteChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    const updatedNote = event.currentTarget.value;
+    setPinnedNote(updatedNote);
+    localStorage.setItem("jotthought-pinned-note", updatedNote);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@gmail\.com$/.test(normalizedEmail)) {
+      setError("Enter a valid Gmail address ending in @gmail.com.");
+      return;
+    }
+
+    if (password.length <= 6) {
+      setError("Your password must be more than 6 characters.");
+      return;
+    }
+
+    sessionStorage.setItem("noted-user", normalizedEmail);
+    setError("");
+    router.push("/notes");
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="login-shell">
+      <section className="login-intro" aria-label="JotThought introduction">
+        <Link className="wordmark" href="/" aria-label="JotThought home">
+          <span className="wordmark-icon" aria-hidden="true">JT</span>
+          JotThought
+        </Link>
+        <div className="intro-copy">
+          <p className="eyebrow">A little space for your thoughts</p>
+          <h1>Get it out<br />of your head.</h1>
+          <p className="intro-description">Keep the ideas, reminders, and little things you don’t want to lose.</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+        <div className="paper-note">
+          <span className="note-pin" />
+          <span className="paper-date">A NOTE TO SELF · 01</span>
+          <textarea
+            className="paper-note-input"
+            aria-label="Pinned note text. It saves automatically."
+            rows={4}
+            maxLength={120}
+            value={pinnedNote}
+            onChange={handlePinnedNoteChange}
+          />
+          <span className="paper-scribble" aria-hidden="true">↗</span>
+        </div>
+        <p className="intro-footer">A quieter place to think.</p>
+      </section>
+
+      <section className="login-panel">
+        <div className="login-form-wrap">
+          <p className="eyebrow form-eyebrow">YOUR NOTEBOOK AWAITS</p>
+          <h2>Welcome back.</h2>
+          <p className="form-description">Sign in to pick up where your thoughts left off.</p>
+
+          <form className="login-form" onSubmit={handleSubmit} noValidate>
+            <label htmlFor="email">Email address</label>
+            <input
+              id="email"
+              name="email"
+              type="text"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="you@gmail.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              aria-describedby={error ? "login-error" : undefined}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="At least 7 characters"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              aria-describedby={error ? "login-error" : undefined}
+            />
+
+            <button className="login-button" type="submit">Open my notebook <span aria-hidden="true">→</span></button>
+            <p className="login-error" id="login-error" role="alert">{error}</p>
+          </form>
+          <p className="form-footnote">For this demo, use any Gmail address and a password longer than 6 characters.</p>
         </div>
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }
